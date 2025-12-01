@@ -1,0 +1,11 @@
+- hosts: staging_web
+  become: yes
+  roles:
+    - nginx
+    - php
+    - app
+
+- hosts: staging_db
+  become: yes
+  roles:
+    - mysql

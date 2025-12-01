@@ -1,0 +1,20 @@
+- name: Install PHP and PHP-FPM
+  apt:
+    name:
+      - php-fpm
+      - php-mysql
+    state: present
+    update_cache: yes
+
+- name: Ensure PHP-FPM is running
+  service:
+    name: php8.1-fpm
+    state: started
+    enabled: yes
+
+- name: Install PHP MySQL Extension
+  apt:
+    name: php-mysql
+    state: present
+    update_cache: yes
+  notify: Restart PHP-FPM

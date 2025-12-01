@@ -1,0 +1,41 @@
+- name: Install MySQL Server
+  apt:
+    name: mysql-server
+    state: present
+    update_cache: yes
+
+- name: Ensure MySQL is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Install Python MySQL dependency
+  apt:
+    name: python3-pymysql
+    state: present
+    update_cache: yes
+
+- name: Create database
+  community.mysql.mysql_db:
+    name: myapp
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+- name: Create MySQL user for each web server
+  community.mysql.mysql_user:
+    name: "{{ db_user }}"
+    host: "{{ hostvars[item].ansible_host }}"
+    password: "{{ db_password }}"
+    priv: "myapp.*:ALL"
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+    check_implicit_admin: yes
+  loop: "{{ groups[web_group] }}"
+
+- name: Allow MySQL to listen on all interfaces
+  lineinfile:
+    path: /etc/mysql/mysql.conf.d/mysqld.cnf
+    regexp: '^bind-address'
+    line: 'bind-address = 0.0.0.0'
+  notify: restart mysql

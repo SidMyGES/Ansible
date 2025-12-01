@@ -1,0 +1,31 @@
+- name: Install NGINX
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Ensure NGINX is running
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Disable default NGINX site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Deploy NGINX configuration
+  copy:
+    src: conf
+    dest: /etc/nginx/sites-available/conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable NGINX site
+  file:
+    src: /etc/nginx/sites-available/conf
+    dest: /etc/nginx/sites-enabled/conf
+    state: link
+  notify: Restart nginx

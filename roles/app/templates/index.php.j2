@@ -1,0 +1,85 @@
+<?php
+// Database connection
+try {
+    $pdo = new PDO(
+        "mysql:host={{ db_host }};dbname=myapp;charset=utf8",
+        "{{ db_user }}",
+        "{{ db_password }}",
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]
+    );
+} catch (Exception $e) {
+    echo "<pre>DATABASE ERROR:\n" . $e->getMessage() . "</pre>";
+    exit();
+}
+
+// Create table if it doesn't exist
+$pdo->exec("CREATE TABLE IF NOT EXISTS messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    content VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)");
+
+// Insert new message
+if ($_SERVER["REQUEST_METHOD"] === "POST" && !empty($_POST["message"])) {
+    $stmt = $pdo->prepare("INSERT INTO messages (content) VALUES (?)");
+    $stmt->execute([$_POST["message"]]);
+    header("Location: /"); // refresh page so form clears
+    exit();
+}
+
+// Fetch all messages
+$messages = $pdo->query("SELECT * FROM messages ORDER BY id DESC")->fetchAll();
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LAMP Stack Test</title>
+    <style>
+        body {
+            font-family: Arial;
+            display: flex;
+            gap: 40px;
+            padding: 40px;
+        }
+        .input-box {
+            width: 300px;
+        }
+        .message-list {
+            width: 300px;
+            border-left: 2px solid #ccc;
+            padding-left: 20px;
+        }
+        .message-item {
+            background: #f5f5f5;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="input-box">
+    <h2>Add a Message</h2>
+    <form method="POST">
+        <input type="text" name="message" placeholder="Write something…" style="width:100%; padding:10px">
+        <button type="submit" style="margin-top:10px; padding:10px; width:100%;">Save</button>
+    </form>
+</div>
+
+<div class="message-list">
+    <h2>Saved Messages</h2>
+    <?php foreach ($messages as $msg): ?>
+        <div class="message-item">
+            <b>#<?= $msg['id'] ?></b> — <?= htmlspecialchars($msg['content']) ?>
+            <br><small><?= $msg['created_at'] ?></small>
+        </div>
+    <?php endforeach; ?>
+</div>
+
+</body>
+</html>

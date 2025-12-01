@@ -1,0 +1,11 @@
+- hosts: production_web
+  become: yes
+  roles:
+    - nginx
+    - php
+    - app
+
+- hosts: production_db
+  become: yes
+  roles:
+    - mysql
